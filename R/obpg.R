@@ -1,3 +1,18 @@
+#' Given an opgp_url table, convert to NRT
+#' 
+#' @export
+#' @param x output of obpg_url()
+#' @param table of NRT urls
+obpg_make_nrt = function(x = obpg_url()){
+  meta_nrt = function(y){
+    y = sub("http", "https", y)
+    sub("NRT.nc", "NRT.nc.dmr.html", y, fixed = TRUE)
+  }
+  dplyr::mutate(x,
+    opendap = sub(".nc", ".NRT.nc", .data$opendap, fixed = TRUE),
+    meta = meta_nrt(.data$opendap))
+}
+
 #' Craft a OBPG URL for a given date
 #' 
 #' @export
@@ -10,38 +25,52 @@
 #' @param period character period component of path
 #' @param product character, provides version and extend info, leave as default
 #' @param resolution character resolution component of path
+#' @param nrt logical if TRUE add "NRT" as the trailing segment meaning "near real time"
 #' @return one or more URLs
 obpg_url <- function(date = Sys.Date() - 2,
                      where = "opendap",
-                     root =      "https://oceandata.sci.gsfc.nasa.gov/opendap",
+                     root = "http://oceandata.sci.gsfc.nasa.gov/opendap",
                      level = c("L3", "L3SMI")[2],
-                     mission = c("MODIS",  "S3A", "SNPP", "ADEOS", "SEASTAR")[3],
-                     instrument = c("AQUA", "TERRA", "OLCI", "SEAWIFS", "VIIRS", "OCTS")[5],
+                     mission = c("MODIS",  "S3A", "SNPP", "ADEOS", "SEASTAR", "PACE")[3],
+                     instrument = c("AQUA", "TERRA", "OLCI", "SEAWIFS", "VIIRS", "OCTS", "PACE")[5],
                      period = c("DAY", "MONTH")[1],
                      product =   "SST.sst",
-                     resolution = "9km"){
+                     resolution = "9km",
+                     nrt = FALSE){
   
   if (inherits(date, "character")) date <- as.Date(date)  
   
-  #src <- sprintf("%s_%s", toupper(mission[1]), toupper(instrument[1]))
   src <- switch(instrument,
                 "AQUA" = "AQUA_MODIS",
                 "TERRA" = "TERRA_MODIS",
-                "VIIRS" = "SNPP_VIIRS")
+                "VIIRS" = "SNPP_VIIRS",
+                "PACE" = "PACE_OCI")
   
   product <- sprintf("L3m.%s.%s", period, product)
   
   root_mission <- switch(instrument,
-                         "AQUA" = "https://oceandata.sci.gsfc.nasa.gov/opendap/MODISA",
-                         "TERRA" = "https://oceandata.sci.gsfc.nasa.gov/opendap/MODIST",
-                         "VIIRS" = "https://oceandata.sci.gsfc.nasa.gov/opendap/VIIRS")
+                         "AQUA" = "http://oceandata.sci.gsfc.nasa.gov/opendap/MODISA",
+                         "TERRA" = "http://oceandata.sci.gsfc.nasa.gov/opendap/MODIST",
+                         "VIIRS" = "http://oceandata.sci.gsfc.nasa.gov/opendap/VIIRS",
+                         "PACE" = "http://oceandata.sci.gsfc.nasa.gov/opendap/PACE_OCI")
   
-  name <- sprintf("%s.%s.%s.%s.nc",
+  pattern = "%s.%s.%s.%s.nc"
+  name <- sprintf(pattern,
                   src,
                   format(date, "%Y%m%d"),
                   product,
                   resolution)
-  file.path(root_mission, level, format(date, "%Y"), format(date, "%m%d"), name)                     
+  #http://oceandata.sci.gsfc.nasa.gov/opendap/VIIRS/L3SMI/2025/0111/SNPP_VIIRS.20250111.L3m.DAY.SST.sst.9km.NRT.nc
+  #https://oceandata.sci.gsfc.nasa.gov/opendap/VIIRS/L3SMI/2025/0111/SNPP_VIIRS.20250111.L3m.DAY.SST.sst.9km.NRT.nc.dmr.html
+  
+  opendap = file.path(root_mission, level, format(date, "%Y"), format(date, "%m%d"), name)  
+  
+  meta = sub("http", "https", opendap)
+  meta = sub(".nc", ".nc.dmr.html", meta, fixed = TRUE)
+  
+  r = dplyr::tibble(meta = meta, opendap = opendap)
+  if (nrt) r = obpg_make_nrt(r)
+  r
 }
 
 

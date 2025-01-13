@@ -8,14 +8,15 @@ Depends:
   R (>= 4.1)
 Imports:
   utils,
+  httr,
   rlang,
   dplyr,
   tidyr,
   thredds,
   sf,
   stars,
-  ncdf4,
-  xyzt
+  tidync,
+  ncdf4
 Maintainer: Ben Tupper <btupper@bigelow.org>
 Author: Ben Tupper <btupper@bigelow.org>, Johnathan Evanilla <jevanilla@bigelow.org>
 License: MIT + file LICENSE

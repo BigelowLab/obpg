@@ -19,10 +19,7 @@ Packages from CRAN:
 + [stars](https://CRAN.R-project.org/package=stars)
 + [tidyr](https://CRAN.R-project.org/package=tidyr)
 + [ncdf4](https://CRAN.R-project.org/package=ncdf4)
-
-Packages from Github:
-
-+ [xyzt](https://github.com/BigelowLab/xyzt)
++ [tidync](https://CRAN.R-project.org/package=ncdf4)
 
 
 ## Installation
@@ -42,8 +39,6 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(sf)
   library(stars)
-  
-  library(xyzt)
   library(obpg)
 })
 ```

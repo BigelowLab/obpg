@@ -1,3 +1,26 @@
+#' Given an object from which a file database can be extracted, 
+#' construct a path for writing files.
+obpg_path = function(x, root = "."){
+  
+  
+  
+}
+
+#' Browse the metadata OPeNDAP page for a given URL
+#' 
+#' @export
+#' @param x table with 'meta' and 'opendap' variables.
+#' @return the output, invisibly
+browse_obpg = function(x = obpg_url()){
+  x = dplyr::filter(x, !error)
+  if (nrow(x) == 0){
+    message("no metadata service available")
+  } else {
+    httr::BROWSE(x$meta[1])
+  }
+  invisible(x) 
+}
+
 #' Given an opgp_url table, convert to NRT
 #' 
 #' @export
@@ -13,8 +36,30 @@ obpg_make_nrt = function(x = obpg_url()){
     meta = meta_nrt(.data$opendap))
 }
 
+#' Test the http service for one or more rows of the output
+#' of \code{\link{obpg_url}}
+#' 
+#' @export
+#' @param x table produced by \code{\link{obpg_url}}
+#' @return the input table, with possible midifications to the *error*
+#'   variable.  TRUE means the http check returns an error code,
+#'   FALSE means no error, and NA means untested.
+obpg_test_http = function(x){
+  dplyr::rowwise(x) |>
+    dplyr::group_map(
+      function(tbl, key){
+        dplyr::mutate(tbl, error = http_bad(.data$meta))
+      }) |>
+    dplyr::bind_rows()
+}
+
+
 #' Craft a OBPG URL for a given date
 #' 
+#' Not all OBPG products are supported. If there is one missing that you would
+#' like to add, please contact the package maintainer.
+#' 
+#' @seealso \href{https://oceandata.sci.gsfc.nasa.gov/opendap/}{OBPG OPeNDAP catalog} 
 #' @export
 #' @param date character, POSIXt or Date the date to retrieve
 #' @param where character ignored (for now)
@@ -25,18 +70,29 @@ obpg_make_nrt = function(x = obpg_url()){
 #' @param period character period component of path
 #' @param product character, provides version and extend info, leave as default
 #' @param resolution character resolution component of path
-#' @param nrt logical if TRUE add "NRT" as the trailing segment meaning "near real time"
 #' @return one or more URLs
 obpg_url <- function(date = Sys.Date() - 2,
                      where = "opendap",
                      root = "http://oceandata.sci.gsfc.nasa.gov/opendap",
                      level = c("L3", "L3SMI")[2],
                      mission = c("MODIS",  "S3A", "SNPP", "ADEOS", "SEASTAR", "PACE")[3],
-                     instrument = c("AQUA", "TERRA", "OLCI", "SEAWIFS", "VIIRS", "OCTS", "PACE")[5],
+                     instrument = c("AQUA", "TERRA", "SEAWIFS", "VIIRS")[4],
                      period = c("DAY", "MONTH")[1],
                      product =   "SST.sst",
-                     resolution = "9km",
-                     nrt = FALSE){
+                     resolution = "9km"){
+  
+  if (FALSE){
+    # contents never run, for debugging purposes
+    date = Sys.Date() - 2
+    where = "opendap"
+    root = "http://oceandata.sci.gsfc.nasa.gov/opendap"
+    level = c("L3", "L3SMI")[2]
+    mission = c("MODIS",  "S3A", "SNPP", "ADEOS", "SEASTAR", "PACE")[3]
+    instrument = c("AQUA", "TERRA", "SEAWIFS", "VIIRS")[4]
+    period = c("DAY", "MONTH")[1]
+    product =   "SST.sst"
+    resolution = "9km"
+  }
   
   if (inherits(date, "character")) date <- as.Date(date)  
   
@@ -68,8 +124,11 @@ obpg_url <- function(date = Sys.Date() - 2,
   meta = sub("http", "https", opendap)
   meta = sub(".nc", ".nc.dmr.html", meta, fixed = TRUE)
   
-  r = dplyr::tibble(meta = meta, opendap = opendap)
-  if (nrt) r = obpg_make_nrt(r)
+  r = dplyr::tibble(meta = meta, opendap = opendap, error = NA)
+  r = r |>
+    dplyr::bind_rows(obpg_make_nrt(r)) |>
+    obpg_test_http()
+  
   r
 }
 

@@ -18,8 +18,8 @@ query_obpg_climatology(
 \arguments{
 \item{years}{numeric or character, the years to query}
 
-\item{climatology}{char, the climatology to seek, inluding "CU", "SCSU", 
-"SCAU", "SCWI", "SCSP", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", 
+\item{climatology}{char, the climatology to seek, inluding "CU", "SCSU",
+"SCAU", "SCWI", "SCSP", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
 "Aug", "Sep", "Oct", "Nov", "Dec"}
 
 \item{platform}{char, the name of the mission/platform}
@@ -40,9 +40,9 @@ zero or more character URLs (most likely just one)
 \description{
 Climatologies are stored at the first date upon which that climatology can
 be computed for the mission.  For example, seasonal climatology for summer is
-June 21, 2002 (for June, July and August).  These carry two dates (start and 
+June 21, 2002 (for June, July and August).  These carry two dates (start and
 stop) with the latter subject to updates.  So we search by pattern matching
 the climatology period, the parameter and the resolution.  We break the search
-when a match is found.  If more than one match is found then the latter is 
+when a match is found.  If more than one match is found then the latter is
 retrieved under the assumption that it is the most recent update.
 }

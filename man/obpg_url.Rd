@@ -7,10 +7,10 @@
 obpg_url(
   date = Sys.Date() - 2,
   where = "opendap",
-  root = "https://oceandata.sci.gsfc.nasa.gov/opendap",
+  root = "http://oceandata.sci.gsfc.nasa.gov/opendap",
   level = c("L3", "L3SMI")[2],
-  mission = c("MODIS", "S3A", "SNPP", "ADEOS", "SEASTAR")[3],
-  instrument = c("AQUA", "TERRA", "OLCI", "SEAWIFS", "VIIRS", "OCTS")[5],
+  mission = c("MODIS", "S3A", "SNPP", "ADEOS", "SEASTAR", "PACE")[3],
+  instrument = c("AQUA", "TERRA", "SEAWIFS", "VIIRS")[4],
   period = c("DAY", "MONTH")[1],
   product = "SST.sst",
   resolution = "9km"
@@ -39,5 +39,9 @@ obpg_url(
 one or more URLs
 }
 \description{
-Craft a OBPG URL for a given date
+Not all OBPG products are supported. If there is one missing that you would
+like to add, please contact the package maintainer.
+}
+\seealso{
+\href{https://oceandata.sci.gsfc.nasa.gov/opendap/}{OBPG OPeNDAP catalog}
 }

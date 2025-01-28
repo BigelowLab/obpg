@@ -2,8 +2,8 @@
 % Please edit documentation in R/obpg-package.R
 \docType{package}
 \name{obpg}
+\alias{obpg-package}
 \alias{obpg}
-\alias{_PACKAGE}
 \title{obpg: Simplified access to OBPG (Ocean Biology Processing Group) data from R.}
 \description{
 Simplified access to OBPG (Ocean Biology Processing Group) data from R.

@@ -3,9 +3,9 @@ title: "obpg"
 output: github_document
 ---
 
-Access OPeNDAP OBPG data from R. Extract point or bounded boxes (as raster).
+Access OPeNDAP [OBPG](https://oceancolor.gsfc.nasa.gov/) data from R.
 
-Find a catalog of the available OBPG data offerings [here](https://oceandata.sci.gsfc.nasa.gov/opendap/)
+This package provides simple tools for accessing most of the offerings found [here](https://oceandata.sci.gsfc.nasa.gov/opendap/).  Frankly, this package leverages OBPG's excellent filename standards with some assumptions about the organizational heirarchy on the server-side.  If you need a more robust solution then consider using the [thredds](https://github.com/BigelowLab/thredds) package to navigate the catalog. Use `thredds` to navigate the server catalog to find your desired product, then you can use this package to open the product as an OPeNDAP resource.
 
 ## Requirements
 
@@ -14,16 +14,13 @@ Find a catalog of the available OBPG data offerings [here](https://oceandata.sci
 Packages from CRAN:
 
 + [rlang](https://CRAN.R-project.org/package=rlang)
++ [httr](https://CRAN.R-project.org/package=httr)
++ [readr](https://CRAN.R-project.org/package=readr)
 + [dplyr](https://CRAN.R-project.org/package=httr)
 + [sf](https://CRAN.R-project.org/package=sf)
 + [stars](https://CRAN.R-project.org/package=stars)
 + [tidyr](https://CRAN.R-project.org/package=tidyr)
-+ [ncdf4](https://CRAN.R-project.org/package=ncdf4)
-
-Packages from Github:
-
-+ [xyzt](https://github.com/BigelowLab/xyzt)
-
++ [tidync](https://CRAN.R-project.org/package=ncdf4)
 
 ## Installation
 
@@ -31,8 +28,18 @@ Packages from Github:
 remotes::install_github("BigelowLab/obpg")
 ```
 
-
 ### Usage
+
+This package provides utilties for the following...
+
++ Generate URLs for products
+
++ Open the OPeNDAP product resources and query the contents as a [tidync](https://github.com/ropensci/tidync) object.
+
++ Extract the data in whole or part (rectangular subset) as a [stars](https://r-spatial.github.io/stars/) object
+
++ Archive files (as GeoTIFF) in an informal database arrangement 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -42,101 +49,29 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(sf)
   library(stars)
-  
-  library(xyzt)
   library(obpg)
 })
 ```
 
+# Generate a URL
 
-#### Working with points.  
-
-See the [xyzt](https://github.com/BigelowLab/xyzt) package for more details on the example Gulf of Maine data.
+Generate a URL for a data product with `obpg_url()` which accepts a number of arguments specifying the mission, instrument date, period, resolution and the like.
 
 ```{r}
-# read in example GOM points
-x <- xyzt::read_gom() |>
-  dplyr::select(-time, -depth) |>
-  xyzt::as_POINT()
+suppressPackageStartupMessages({
+  library(obpg)
+  library(tidync)
+  library(dplyr)
+})
 
-# generate a MUR url for a given date
-url <- obpg_url("2020-07-12")
-
-# open the resource
-X <- ncdf4::nc_open(url)
-
-# extract the data 
-covars <- obpg::extract(x, X, varname = obpg::obpg_vars(X))
-
-# bind to the input
-(y <- dplyr::bind_cols(x, covars))
+url = obpg_url(date = "2024-12-18",
+               mission = "SNPP", 
+               instrument = "VIIRS",
+               product = "SST.sst",
+               period = "DAY",
+               resolution = "9km")
+dplyr::glimpse(url)
 ```
 
 
-#### Working with bounding boxes
-
-```{r}
-x <- xyzt::read_gom() |>
-  dplyr::select(-time, -depth) |>
-  xyzt::as_BBOX()
-
-covars <- obpg::extract(x, X, varname = obpg::obpg_vars(X))
-
-covars
-```
-
-Plot the bounding box of data with the points we pulled above:
-
-```{r}
-x <- xyzt::read_gom() |>
-  dplyr::select(-time, -depth) |>
-  xyzt::as_POINT()
-par(mfrow = c(1,2))
-plot(covars, attr = 'sst', col = sf.colors(n=16), axes = TRUE, reset = FALSE)
-plot(sf::st_geometry(x), add = TRUE, col = "green", pch = 19, cex = 2)
-```
-
-
-```{r}
-# cleanup
-ncdf4::nc_close(X)
-```
-
-
-## Climatologies
-
-Mission-length climatologies are available (for the entire mission, a particular season or month.) You can search for these. Here we find the seasonal (northern) summer.
-
-```{r}
-uri <- query_obpg_climatology(climatology = "SCSU", res = "9km", param = "SST.sst")
-uri
-```
-
-```{r}
-
-x <- xyzt::read_gom() |>
-  dplyr::select(-time, -depth) |>
-  xyzt::as_BBOX()
-
-# open the resource
-X <- ncdf4::nc_open(uri)
-
-covars <- obpg::extract(x, X, varname = obpg::obpg_vars(X), flip = "none")
-covars
-```
-
-```{r}
-x <- xyzt::read_gom() |>
-  dplyr::select(-time, -depth) |>
-  xyzt::as_POINT()
-par(mfrow = c(1,2))
-plot(covars, attr = 'sst', col = sf.colors(n=16), axes = TRUE, reset = FALSE)
-plot(sf::st_geometry(x), add = TRUE, col = "green", pch = 19, cex = 2)
-```
-
-
-```{r}
-# cleanup
-ncdf4::nc_close(X)
-```
 

@@ -3,21 +3,21 @@ Title: obpg
 Description: Simplified access to OBPG (Ocean Biology Processing Group) data from R.
 URL: https://github.com/BigelowLab/obpg
 BugReports: https://github.com/BigelowLab/obpg/issues
-Version: 0.1
+Version: 1.0
 Depends:
   R (>= 4.1)
 Imports:
   utils,
+  httr,
   rlang,
   dplyr,
-  tidyr,
-  thredds,
   sf,
   stars,
-  ncdf4,
-  xyzt
+  tidync, 
+  readr
 Maintainer: Ben Tupper <btupper@bigelow.org>
 Author: Ben Tupper <btupper@bigelow.org>, Johnathan Evanilla <jevanilla@bigelow.org>
 License: MIT + file LICENSE
 Encoding: UTF-8
-RoxygenNote: 7.2.1
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2

@@ -1,5 +1,6 @@
 #' Retrieve a bounding box for the Pacific Northwest
 #' 
+#' @export
 #' @param form chr, one of "vector", "bbox" or "polygon" to determine the 
 #'    return type
 #' @return named vector, sf bbox or sf polygon as requested
@@ -16,6 +17,7 @@ pnw_bb = function(form = c("vector", "bbox", "polygon")[3]){
 
 #' Given a URL, test if the server throws an error
 #' 
+#' @export
 #' @param x chr, URL to test
 #' @return logical, TRUE if an error is thrown
 http_bad = function(x){

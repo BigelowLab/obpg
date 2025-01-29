@@ -4,7 +4,7 @@
 \alias{fetch_obpg}
 \title{Given a URL, fectch and download to a specified path the data as TIFF.}
 \usage{
-fetch_obpg(x = obpg_url(), bb = NULL, root = ".")
+fetch_obpg(x = obpg_url(), bb = NULL, path = ".")
 }
 \arguments{
 \item{x}{url-database or tidync object with database ("db") attribute}

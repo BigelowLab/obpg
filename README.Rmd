@@ -5,7 +5,7 @@ output: github_document
 
 Access OPeNDAP [OBPG](https://oceancolor.gsfc.nasa.gov/) data from R.
 
-This package provides simple tools for accessing most of the offerings found [here](https://oceandata.sci.gsfc.nasa.gov/opendap/).  Frankly, this package leverages OBPG's excellent filename standards with some assumptions about the organizational heirarchy on the server-side.  If you need a more robust solution then consider using the [thredds](https://github.com/BigelowLab/thredds) package to navigate the catalog. Use `thredds` to navigate the server catalog to find your desired product, then you can use this package to open the product as an OPeNDAP resource.
+This package provides simple tools for accessing most of the offerings found [here](https://oceandata.sci.gsfc.nasa.gov/opendap/).  This package leverages OBPG's excellent filename standards with some assumptions about the organizational heirarchy on the server-side.  If you need a more robust solution then consider using the [thredds](https://github.com/BigelowLab/thredds) package to navigate the catalog. Use `thredds` to navigate the server catalog to find your desired product, then you can use this package to open the product as an OPeNDAP resource.
 
 ## Requirements
 
@@ -16,10 +16,9 @@ Packages from CRAN:
 + [rlang](https://CRAN.R-project.org/package=rlang)
 + [httr](https://CRAN.R-project.org/package=httr)
 + [readr](https://CRAN.R-project.org/package=readr)
-+ [dplyr](https://CRAN.R-project.org/package=httr)
++ [dplyr](https://CRAN.R-project.org/package=dplyr)
 + [sf](https://CRAN.R-project.org/package=sf)
 + [stars](https://CRAN.R-project.org/package=stars)
-+ [tidyr](https://CRAN.R-project.org/package=tidyr)
 + [tidync](https://CRAN.R-project.org/package=ncdf4)
 
 ## Installation
@@ -46,6 +45,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 suppressPackageStartupMessages({
+  library(rnaturalearth)
   library(dplyr)
   library(sf)
   library(stars)
@@ -55,23 +55,108 @@ suppressPackageStartupMessages({
 
 # Generate a URL
 
-Generate a URL for a data product with `obpg_url()` which accepts a number of arguments specifying the mission, instrument date, period, resolution and the like.
+Generate a URL for a data product with `obpg_url()` which accepts a number of arguments specifying the mission, instrument date, period, resolution and the like. It produces a table with three variables:
 
-```{r}
-suppressPackageStartupMessages({
-  library(obpg)
-  library(tidync)
-  library(dplyr)
-})
++ `meta` the url of the user interface to the metadata
 
++ `opendap` the url for the OPeNDAP resource
+
++ `error` a logical based upon the existence of the `meta` page. If FALSE no error was encountered.
+
+There are two rows, one for NRT (near real time) and one for post-processed. When data is first posted it is likely to have the "NRT" flag embedded in its filename.  We prepopulate these to make downloading easier.
+
+```{r url}
 url = obpg_url(date = "2024-12-18",
                mission = "SNPP", 
                instrument = "VIIRS",
                product = "SST.sst",
                period = "DAY",
                resolution = "9km")
-dplyr::glimpse(url)
+url
+```
+OBPG filenames are highly descriptive.  For instance, if we print the basename of the first `opendap` element: `{r} url$opendap[1]`.  That file name encodes the even date, the resolution, the product name and suite name, as well as info about the instrument platform flying around in orbit.
+
+# Open a connection
+
+Simply pass the url table (above) to`open_obpg()` to open a connection.  This is at heart a [tidync](https://github.com/ropensci/tidync) with one small augmentation. If you are not familiar with [tidync](https://github.com/ropensci/tidync) objects - worry not!
+
+```{r open}
+x = open_obpg(url)
+```
+
+Attached to the object is a tiny table, which we call a database, that represents a decomposition of the base filename.
+
+```{r db}
+db = attr(x, "db") |> 
+  print()
+```
+
+# Crop to a subset
+
+Next we can crop to a subset of the resource by providing a bounding box. Cropping is non-destructive - you can always crop the same object using a different bounding box.  We provide an example bounding box for the Pacific Northwest.
+
+```{r extract}
+bb = pnw_bb()
+x = crop_obpg(x, bb)
+```
+
+# Extract as `stars`
+
+Finally, we can extract a `stars` array.
+
+```{r stars}
+coast = rnaturalearth::ne_coastline(scale = "medium", returnclass = "sf") |>
+  sf::st_geometry()
+y = as_stars(x)
+plot(y, axes = TRUE, main = db$suite, reset = FALSE)
+plot(coast, col = "orange", lwd = 2, add = TRUE)
+```
+
+# Fetching data and saving images
+
+We provide a toolset for downloading and organizing a database of files.  Consider downloading a time series for one particular product. You need to provide a root directory into which the data will be stored.  We'll make in your home directory, and we'll add a subdirectory structure.
+
+```{r root}
+root = "~/obpg_data/pnw/SNPP_VIRRS/L3m"
+ok = make_path(root)
+```
+
+Next we make a series of dates, and the iterate over a series of fetches.  Each call to `fetch_obpg()` returns the small database (if successful), which we then bind into one table and save.
+
+```{r fetch}
+dates = seq(from = as.Date("2025-01-01"), length = 7, by = "day")
+db = lapply(dates,
+            function(date){
+              cat("working on", format(date, "%Y-%m-%d"), "\n")
+              url = url = obpg_url(date = date,
+                mission = "SNPP", 
+                instrument = "VIIRS",
+                product = "SST.sst",
+                period = "DAY",
+                resolution = "9km")
+              dbase = fetch_obpg(url, bb = bb, path = root)
+              return(dbase)
+            }) |>
+  dplyr::bind_rows() |>
+  write_database(root)
+print(db)
+```
+
+# Read files form a filtered database
+
+Finally, you can read in one or more files as stars objects.
+
+```{r read_data}
+filenames  = compose_filename(db, root)
+x = stars::read_stars(filenames, along = list(time = db$date))
+x
 ```
 
 
-
+And plot...
+```{r plot_data}
+coast_plot = function(){
+  plot(coast, col = "orange", lwd = 2, add = TRUE)
+}
+plot(x, hook = coast_plot)
+```

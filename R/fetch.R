@@ -9,12 +9,12 @@
 #' @return a file database
 fetch_obpg = function(x = obpg_url(),
                       bb = NULL,
-                      root = "."){
+                      path = "."){
   if (!inherits(x, "tidync")) x = open_obpg(x)
   if (!is.null(bb)) x = crop_obpg(x, bb)
   s = as_stars(x)
   db = attr(x, "db")
-  ofile = compose_filename(db, path = root)
+  ofile = compose_filename(db, path = path)
   ok = make_path(dirname(ofile))
   s = stars::write_stars(s, ofile)
   return(db)

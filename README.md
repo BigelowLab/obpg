@@ -90,24 +90,27 @@ url
     ## 2 https://oceandata.sci.gsfc.nasa.gov/opendap/VIIRS/L3SMI/2024/12… http:/… FALSE
 
 OBPG filenames are highly descriptive. For instance, if we print the
-basename of the first `opendap` element: `{r} url$opendap[1]`. That file
-name encodes the even date, the resolution, the product name and suite
-name, as well as info about the instrument platform flying around in
-orbit.
+basename of the first `opendap` element:
+<http://oceandata.sci.gsfc.nasa.gov/opendap/VIIRS/L3SMI/2024/1218/SNPP_VIIRS.20241218.L3m.DAY.SST.sst.9km.nc>.
+That file name encodes the event date, the resolution, the product name
+and suite name, as well as info about the instrument platform flying
+around in orbit.
 
 # Open a connection
 
-Simply pass the url table (above) to`open_obpg()` to open a connection.
-This is at heart a [tidync](https://github.com/ropensci/tidync) with one
-small augmentation. If you are not familiar with
-[tidync](https://github.com/ropensci/tidync) objects - worry not!
+Simply pass the `url` table (above) to`open_obpg()` to open a
+connection. This is at heart a
+[tidync](https://github.com/ropensci/tidync) with one small
+augmentation. If you are not familiar with
+[tidync](https://github.com/ropensci/tidync) objects - worry not as you
+don’t even have to look at it!
 
 ``` r
 x = open_obpg(url)
 ```
 
-Attached to the object is a tiny table, which we call a database, that
-represents a decomposition of the base filename.
+Attached as an attribute to the object is a tiny table that represents a
+decomposition of the base filename into constituent parts.
 
 ``` r
 db = attr(x, "db") |> 
@@ -122,9 +125,9 @@ db = attr(x, "db") |>
 # Crop to a subset
 
 Next we can crop to a subset of the resource by providing a bounding
-box. Cropping is non-destructive - you can always crop the same object
-using a different bounding box. We provide an example bounding box for
-the Pacific Northwest.
+box. Cropping is non-destructive - you can always later crop the same
+object using a different bounding box. We provide an example bounding
+box for the Pacific Northwest.
 
 ``` r
 bb = pnw_bb()
@@ -150,7 +153,9 @@ plot(coast, col = "orange", lwd = 2, add = TRUE)
 We provide a toolset for downloading and organizing a database of files.
 Consider downloading a time series for one particular product. You need
 to provide a root directory into which the data will be stored. We’ll
-make in your home directory, and we’ll add a subdirectory structure.
+make in your home directory, and we’ll add a subdirectory structure to
+that. Note that we include region, instrument and level as diretcory
+segments. That allows you to store other types of products along side.
 
 ``` r
 root = "~/obpg_data/pnw/SNPP_VIRRS/L3m"

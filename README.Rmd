@@ -200,8 +200,9 @@ x = read_obpg(db, modis_path)
 x
 ```
 
+Note that two variables are present, `sst` and `chlor_a`.  This only works if the database has equal numbers of dates for each variable.
 
-And plot...
+And we plot...
 ```{r plot_data}
 coast_plot = function(){
   plot(coast, col = "orange", lwd = 2, add = TRUE)
@@ -209,4 +210,13 @@ coast_plot = function(){
 plot(x['sst'], hook = coast_plot)
 ```
 
+
+# Re-building a database
+
+It's possible to mess up your database of directory contents - not to worry as it is easy to build a database by scanning the subdirectories for TIFF files.
+
+```{r build_database}
+db = build_database(modis_path, save_db = TRUE)
+db
+```
 

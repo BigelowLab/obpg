@@ -4,7 +4,7 @@
 \alias{build_database}
 \title{Given a directory, build a database}
 \usage{
-build_database(path = ".", pattern = glob2rx("*.tif"), save_db = FALSE)
+build_database(path = ".", pattern = glob2rx("*.tif"), save_db = FALSE, ...)
 }
 \arguments{
 \item{path}{a path to raster files}
@@ -12,6 +12,8 @@ build_database(path = ".", pattern = glob2rx("*.tif"), save_db = FALSE)
 \item{pattern}{regular expression of the file pattern to search for}
 
 \item{save_db}{logical, if TRUE then write the database}
+
+\item{...}{arguments passed to write_database \strong{if} \code{save_db} is \code{TRUE}.}
 }
 \value{
 tibble or NULL

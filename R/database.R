@@ -132,11 +132,13 @@ compose_filename <- function(x, ...){
 #' @param path a path to raster files
 #' @param save_db logical, if TRUE then write the database
 #' @param pattern regular expression of the file pattern to search for
+#' @param ... arguments passed to write_database **if** `save_db` is `TRUE`.
 #' @return tibble or NULL
 build_database <- function(
     path = ".",
     pattern = glob2rx("*.tif"),
-    save_db = FALSE){
+    save_db = FALSE, 
+    ...){
   
   if (!dir.exists(path[1])) stop("path not found", path[1])
   ff <- list.files(path[1], pattern = pattern,
@@ -144,7 +146,7 @@ build_database <- function(
   
   if (length(ff) > 0){
     x <- decompose_obpg(ff)
-    if (save_db) x <- write_database(x, path)
+    if (save_db) x <- write_database(x, path, ...)
   } else {
     warning("no files found to buid database")
     x <- NULL

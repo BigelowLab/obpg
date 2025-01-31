@@ -13,7 +13,7 @@ open_obpg(x = obpg_url())
 (near real time)}
 }
 \value{
-a tidync object
+a tidync object or NULL
 }
 \description{
 Open a connection to an OPBG resource

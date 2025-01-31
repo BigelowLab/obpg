@@ -25,7 +25,7 @@ decompose_filename(x, ...)
 a database table
 \itemize{
 \item{date, Date  We only use L3 which is by day, so no POSIXct}
-\item{year, character date formatted as YYYY}
+\item{year, numeric date formatted as YYYY}
 \item{mmdd, character date formatted as mmdd}
 \item{mit, character mission-instrument-type}
 \item{level, character string indicating the level}

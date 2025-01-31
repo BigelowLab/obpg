@@ -11,6 +11,7 @@ fetch_obpg = function(x = obpg_url(),
                       bb = NULL,
                       path = "."){
   if (!inherits(x, "tidync")) x = open_obpg(x)
+  if (is.null(x)) return(NULL)
   if (!is.null(bb)) x = crop_obpg(x, bb)
   s = as_stars(x)
   db = attr(x, "db")

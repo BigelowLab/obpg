@@ -142,13 +142,61 @@ db = lapply(dates,
 print(db)
 ```
 
-# Read files form a filtered database
+#' A second data set from a different instrument
+
+Let's make a second dataset from AQUA MODIS data.  First we'll download `sst` and save a database. Next we'll download `chlor_a` and append that to the `sst` database.
+
+It's the same region, but a different instrument, so we should create a new root path just for the MODIS AQUA data.
+
+```{r modis_path}
+modis_path = "~/obpg_data/pnw/AQUA_MODIS/L3m"
+ok = make_path(modis_path)
+```
+
+Now we get the `sst` data.
+
+```{r modis_aqua_sst}
+dates = seq(from = as.Date("2025-01-01"), length = 7, by = "day")
+db = lapply(dates,
+            function(date){
+              cat("working on", format(date, "%Y-%m-%d"), "\n")
+              url = url = obpg_url(date = date,
+                                   mission = "MODIS", 
+                                   instrument = "AQUA",
+                                   product = "SST.sst",
+                                   period = "DAY",
+                                   resolution = "9km")
+              dbase = fetch_obpg(url, bb = bb, path = modis_path)
+              return(dbase)
+            }) |>
+  dplyr::bind_rows() |>
+  write_database(modis_path)
+```
+Now again but this time for `chlor_a`.  Note that we add the `append = TRUE` argument to `write_database()`, whihc means we are going to the database that includes `sst` (from above) plus the newer `chlor_a` database.
+
+```{r modis_chl}
+db = lapply(dates,
+            function(date){
+              cat("working on", format(date, "%Y-%m-%d"), "\n")
+              url = url = obpg_url(date = date,
+                                   mission = "MODIS", 
+                                   instrument = "AQUA",
+                                   product = "CHL.chlor_a",
+                                   period = "DAY",
+                                   resolution = "9km")
+              dbase = fetch_obpg(url, bb = bb, path = modis_path)
+              return(dbase)
+            }) |>
+  dplyr::bind_rows() |>
+  write_database(modis_path, append = TRUE)
+```
+
+# Read files from a filtered database
 
 Finally, you can read in one or more files as stars objects.
 
 ```{r read_data}
-filenames  = compose_filename(db, root)
-x = stars::read_stars(filenames, along = list(time = db$date))
+x = read_obpg(db, modis_path)
 x
 ```
 
@@ -158,5 +206,7 @@ And plot...
 coast_plot = function(){
   plot(coast, col = "orange", lwd = 2, add = TRUE)
 }
-plot(x, hook = coast_plot)
+plot(x['sst'], hook = coast_plot)
 ```
+
+

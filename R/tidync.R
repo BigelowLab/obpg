@@ -64,7 +64,7 @@ as_stars <- function(x, ...) {
 #' @param x chr a single row obpg_url table
 #' @param try_nrt logical, if TRUE and the uri fails, try the same as NRT
 #'  (near real time)
-#' @return a tidync object
+#' @return a tidync object or NULL
 open_obpg <- function(x = obpg_url()){
   
   silent = options("tidync.silent")

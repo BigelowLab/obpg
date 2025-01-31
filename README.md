@@ -118,9 +118,9 @@ db = attr(x, "db") |>
 ```
 
     ## # A tibble: 1 × 11
-    ##   date       year  mmdd  mit        lvl   per   suite param res   nrt   file    
-    ##   <date>     <chr> <chr> <chr>      <chr> <chr> <chr> <chr> <chr> <chr> <chr>   
-    ## 1 2024-12-18 2024  1218  SNPP_VIIRS L3m   DAY   SST   sst   9km   <NA>  SNPP_VI…
+    ##   date        year mmdd  mit        lvl   per   suite param res   nrt   file    
+    ##   <date>     <dbl> <chr> <chr>      <chr> <chr> <chr> <chr> <chr> <chr> <chr>   
+    ## 1 2024-12-18  2024 1218  SNPP_VIIRS L3m   DAY   SST   sst   9km   <NA>  SNPP_VI…
 
 # Crop to a subset
 
@@ -197,32 +197,102 @@ print(db)
 ```
 
     ## # A tibble: 7 × 11
-    ##   date       year  mmdd  mit        lvl   per   suite param res   nrt   file    
-    ##   <date>     <chr> <chr> <chr>      <chr> <chr> <chr> <chr> <chr> <chr> <chr>   
-    ## 1 2025-01-01 2025  0101  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
-    ## 2 2025-01-02 2025  0102  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
-    ## 3 2025-01-03 2025  0103  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
-    ## 4 2025-01-04 2025  0104  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
-    ## 5 2025-01-05 2025  0105  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
-    ## 6 2025-01-06 2025  0106  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
-    ## 7 2025-01-07 2025  0107  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
+    ##   date        year mmdd  mit        lvl   per   suite param res   nrt   file    
+    ##   <date>     <dbl> <chr> <chr>      <chr> <chr> <chr> <chr> <chr> <chr> <chr>   
+    ## 1 2025-01-01  2025 0101  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
+    ## 2 2025-01-02  2025 0102  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
+    ## 3 2025-01-03  2025 0103  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
+    ## 4 2025-01-04  2025 0104  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
+    ## 5 2025-01-05  2025 0105  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
+    ## 6 2025-01-06  2025 0106  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
+    ## 7 2025-01-07  2025 0107  SNPP_VIIRS L3m   DAY   SST   sst   9km   NRT   SNPP_VI…
 
-# Read files form a filtered database
+\#’ A second data set from a different instrument
+
+Let’s make a second dataset from AQUA MODIS data. First we’ll download
+`sst` and save a database. Next we’ll download `chlor_a` and append that
+to the `sst` database.
+
+It’s the same region, but a different instrument, so we should create a
+new root path just for the MODIS AQUA data.
+
+``` r
+modis_path = "~/obpg_data/pnw/AQUA_MODIS/L3m"
+ok = make_path(modis_path)
+```
+
+Now we get the `sst` data.
+
+``` r
+dates = seq(from = as.Date("2025-01-01"), length = 7, by = "day")
+db = lapply(dates,
+            function(date){
+              cat("working on", format(date, "%Y-%m-%d"), "\n")
+              url = url = obpg_url(date = date,
+                                   mission = "MODIS", 
+                                   instrument = "AQUA",
+                                   product = "SST.sst",
+                                   period = "DAY",
+                                   resolution = "9km")
+              dbase = fetch_obpg(url, bb = bb, path = modis_path)
+              return(dbase)
+            }) |>
+  dplyr::bind_rows() |>
+  write_database(modis_path)
+```
+
+    ## working on 2025-01-01 
+    ## working on 2025-01-02 
+    ## working on 2025-01-03 
+    ## working on 2025-01-04 
+    ## working on 2025-01-05 
+    ## working on 2025-01-06 
+    ## working on 2025-01-07
+
+Now again but this time for `chlor_a`. Note that we add the
+`append = TRUE` argument to `write_database()`, whihc means we are going
+to the database that includes `sst` (from above) plus the newer
+`chlor_a` database.
+
+``` r
+db = lapply(dates,
+            function(date){
+              cat("working on", format(date, "%Y-%m-%d"), "\n")
+              url = url = obpg_url(date = date,
+                                   mission = "MODIS", 
+                                   instrument = "AQUA",
+                                   product = "CHL.chlor_a",
+                                   period = "DAY",
+                                   resolution = "9km")
+              dbase = fetch_obpg(url, bb = bb, path = modis_path)
+              return(dbase)
+            }) |>
+  dplyr::bind_rows() |>
+  write_database(modis_path, append = TRUE)
+```
+
+    ## working on 2025-01-01 
+    ## working on 2025-01-02 
+    ## working on 2025-01-03 
+    ## working on 2025-01-04 
+    ## working on 2025-01-05 
+    ## working on 2025-01-06 
+    ## working on 2025-01-07
+
+# Read files from a filtered database
 
 Finally, you can read in one or more files as stars objects.
 
 ``` r
-filenames  = compose_filename(db, root)
-x = stars::read_stars(filenames, along = list(time = db$date))
+x = read_obpg(db, modis_path)
 x
 ```
 
-    ## stars object with 3 dimensions and 1 attribute
+    ## stars object with 3 dimensions and 2 attributes
     ## attribute(s):
-    ##                                 Min. 1st Qu. Median     Mean 3rd Qu.  Max.
-    ## SNPP_VIIRS.20250101.L3m.DAY...  2.48    8.67  9.525 9.484838   10.46 13.72
-    ##                                  NA's
-    ## SNPP_VIIRS.20250101.L3m.DAY...  78322
+    ##                Min.  1st Qu.    Median      Mean    3rd Qu.      Max.   NA's
+    ## chlor_a  0.05804371 0.203919 0.2365431 0.6747229  0.2697187  5.460822 104533
+    ## sst      2.47499990 8.335000 9.2699995 9.1582758 10.0850000 13.804999  78831
     ## dimension(s):
     ##      from  to     offset    delta refsys point x/y
     ## x       1 156       -136  0.08333 WGS 84 FALSE [x]
@@ -235,7 +305,7 @@ And plot…
 coast_plot = function(){
   plot(coast, col = "orange", lwd = 2, add = TRUE)
 }
-plot(x, hook = coast_plot)
+plot(x['sst'], hook = coast_plot)
 ```
 
 ![](README_files/figure-gfm/plot_data-1.png)<!-- -->

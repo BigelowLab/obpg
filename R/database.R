@@ -6,7 +6,7 @@ explain_database = function(){
   dplyr::tribble(
     ~name, ~type, ~description,
     "date", "Date", "We only use L3 which is by day, so no POSIXct",
-    "year", "character", "date formatted as YYYY",
+    "year", "numeric", "date formatted as YYYY",
     "mmdd", "character", "date formatted as mmdd",
     "mit", "character", "mission-instrument-type",
     "level", "character", "string indicating the level",
@@ -26,7 +26,7 @@ explain_database = function(){
 #' @return a database table
 #'  \itemize{
 #'    \item{date, Date  We only use L3 which is by day, so no POSIXct}
-#'    \item{year, character date formatted as YYYY}
+#'    \item{year, numeric date formatted as YYYY}
 #'    \item{mmdd, character date formatted as mmdd}
 #'    \item{mit, character mission-instrument-type}
 #'    \item{level, character string indicating the level}
@@ -58,7 +58,7 @@ decompose_obpg <- function(
   if (any(ix)) nrt[ix] <- sapply(ss[ix], "[[", 8)
   dplyr::tibble(
     date,
-    year  = format(date, "%Y"),
+    year  = format(date, "%Y") |> as.numeric(),
     mmdd  = format(date, "%m%d"),
     mit   = sapply(ss, "[[", 1),
     lvl   = sapply(ss, "[[", 3),
@@ -164,7 +164,10 @@ read_database <- function(path = ".", filename = "database"){
   if (!dir.exists(path[1])) stop("path not found:", path[1])
   filename <- file.path(path,filename[1])
   stopifnot(file.exists(filename))
-  readr::read_csv(filename, show_col_types = FALSE)
+  readr::read_csv(filename,  
+                  col_types = readr::cols(.default = readr::col_character(),
+                                          date = readr::col_date(format = ""),
+                                          year = readr::col_double() ))
 }
 
 #' Write the file-list database
@@ -173,14 +176,45 @@ read_database <- function(path = ".", filename = "database"){
 #' @param x the tibble or data.frame database
 #' @param path character the directory to where the database should reside
 #' @param filename character, the name of the database file
+#' @param append logical, if TRUE try to append to the existing database
 #' @return a tibble
-write_database <- function(x, path, filename = "database"){
+write_database <- function(x, path, filename = "database", append = FALSE){
   if (!dir.exists(path[1])) stop("path not found:", path[1])
+  
+  if (append){
+    return(append_database(x, path, filename = filename))
+  }
+  
+  
   filename <- file.path(path,filename[1])
   readr::write_csv(x, filename)
 }
 
-
+#' Append to the file-list database
+#'
+#' @export
+#' @param x the tibble or data.frame database
+#' @param path character the directory to where the database should reside
+#' @param filename character, the name of the database file
+#' @return a tibble with appended data
+append_database <- function(x, path, filename = "database"){
+  if (!dir.exists(path[1])) stop("path not found:", path[1])
+  origfilename <- file.path(path,filename[1])
+  if(!file.exists(origfilename)){
+    return(write_database(x, path, filename = filename))
+  }
+  orig = read_database(path, filename = filename)
+  orig_info = colnames(orig)
+  x_info =colnames(x)
+  ident = identical(orig_info, x_info)
+  if (!isTRUE(ident)){
+    print(ident)
+    stop("input database doesn't match one stored")
+  }
+  dplyr::bind_rows(orig, x) |>
+    dplyr::distinct() |>
+    write_database(path, filename = filename)
+}
 
 #' Given a database with one or more parameters retrieve a listing of missing dates in the
 #' sequence form first date to last date.

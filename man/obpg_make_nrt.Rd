@@ -8,8 +8,9 @@ obpg_make_nrt(x = obpg_url())
 }
 \arguments{
 \item{x}{output of obpg_url()}
-
-\item{table}{of NRT urls}
+}
+\value{
+table of NRT urls
 }
 \description{
 Given an opgp_url table, convert to NRT

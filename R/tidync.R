@@ -12,8 +12,8 @@ crop_obpg = function(x = open_obpg(), y = pnw_bb()){
   b = sf::st_bbox(y)
   
   tidync::hyper_filter(x,
-                       lon = lon >= b[['xmin']] & lon <= b[['xmax']],
-                       lat = lat >= b[['ymin']] & lat <= b[['ymax']])
+                       lon = .data$lon >= b[['xmin']] & .data$lon <= b[['xmax']],
+                       lat = .data$lat >= b[['ymin']] & .data$lat <= b[['ymax']])
 }
 
 
@@ -31,7 +31,7 @@ as_stars <- function(x, ...) {
   data <- lapply(tidync::hyper_array(x, drop = FALSE), 
                  units::as_units)
 
-  transforms <- tidync:::active_axis_transforms(x)
+  transforms <- tidync::hyper_transforms(x)
   
   lon = dplyr::filter(transforms[[1]], .data$selected) |> dplyr::pull(1)
   xlim = range(lon)
@@ -62,8 +62,6 @@ as_stars <- function(x, ...) {
 #' 
 #' @export
 #' @param x chr a single row obpg_url table
-#' @param try_nrt logical, if TRUE and the uri fails, try the same as NRT
-#'  (near real time)
 #' @return a tidync object or NULL
 open_obpg <- function(x = obpg_url()){
   
@@ -74,7 +72,7 @@ open_obpg <- function(x = obpg_url()){
     })
   
 
-  x = dplyr::filter(x, !error)
+  x = dplyr::filter(x, !.data$error)
   if (nrow(x) == 0){
     message("no opendap service available")
     return(NULL)

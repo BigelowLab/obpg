@@ -302,6 +302,6 @@ database_to_climatology <- function(x, filter = FALSE){
   dd <- strsplit(sapply(ss, "[[", 2), "_", fixed = TRUE)
   x |>
     dplyr::mutate(end_date = as.Date(sapply(dd, "[[", 2), format = "%Y%m%d"), .after = 1) |>
-    dplyr::mutate(end_year = format(end_date, "%Y"), .after = 'year') |>
-    dplyr::mutate(end_mmdd = format(end_date, "%m%d"), .after = 'mmdd')
+    dplyr::mutate(end_year = format(.data$end_date, "%Y"), .after = 'year') |>
+    dplyr::mutate(end_mmdd = format(.data$end_date, "%m%d"), .after = 'mmdd')
 }

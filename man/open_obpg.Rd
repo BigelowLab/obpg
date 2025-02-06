@@ -8,9 +8,6 @@ open_obpg(x = obpg_url())
 }
 \arguments{
 \item{x}{chr a single row obpg_url table}
-
-\item{try_nrt}{logical, if TRUE and the uri fails, try the same as NRT
-(near real time)}
 }
 \value{
 a tidync object or NULL

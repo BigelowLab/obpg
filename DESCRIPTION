@@ -8,6 +8,7 @@ Depends:
   R (>= 4.1)
 Imports:
   utils,
+  units,
   httr,
   rlang,
   dplyr,

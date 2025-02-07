@@ -4,12 +4,17 @@
 \alias{crop_obpg}
 \title{Pseudo-crop a tidync object using a \link[sf:st_bbox]{sf::st_bbox} (or object from which we can determine a \link[sf:st_bbox]{sf::st_bbox})}
 \usage{
-crop_obpg(x = open_obpg(), y = pnw_bb())
+crop_obpg(x = open_obpg(), y = pnw_bb(), pad = c(1, 1))
 }
 \arguments{
 \item{x}{tidync object}
 
 \item{y}{object from which a \link[sf:st_bbox]{sf::st_bbox} can be derived}
+
+\item{pad}{numeric vector, a two element vector (x, y) requesting a slight
+padding (if possible) of the bounding box by (x,y) pixels.  Set to 0
+to skip padding in a particular dimension.  If only one valuye is provided it is
+used in each direction (x,y).}
 }
 \value{
 the output of \link[tidync:hyper_filter]{tidync::hyper_filter}

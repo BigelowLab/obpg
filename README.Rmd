@@ -19,7 +19,7 @@ Packages from CRAN:
 + [dplyr](https://CRAN.R-project.org/package=dplyr)
 + [sf](https://CRAN.R-project.org/package=sf)
 + [stars](https://CRAN.R-project.org/package=stars)
-+ [tidync](https://CRAN.R-project.org/package=ncdf4)
++ [tidync](https://CRAN.R-project.org/package=tidync)
 
 ## Installation
 
@@ -93,7 +93,7 @@ db = attr(x, "db") |>
 
 # Crop to a subset
 
-Next we can crop to a subset of the resource by providing a bounding box. Cropping is non-destructive - you can always later crop the same object using a different bounding box.  We provide an example bounding box for the Pacific Northwest.
+Next we can crop to a subset of the resource by providing a bounding box. Cropping is non-destructive - you can always later crop the same object using a different bounding box.  We provide an example bounding box for the Pacific Northwest.  Note that cropping is a suggestion; actual cropping occurs at pixel boundaries which may or may not align with the requested bounding box.
 
 ```{r extract}
 bb = pnw_bb()
@@ -102,7 +102,7 @@ x = crop_obpg(x, bb)
 
 # Extract as `stars`
 
-Finally, we can extract a `stars` array.
+Finally, we can extract a `stars` array.  In the plot you can see the array with the coastline (orange) and requested bounding box ("purple").  Not that the array data extent is a bit larger than the requested bounding box - see the `pad` keyword of `crop_bb()` for details.
 
 ```{r stars}
 coast = rnaturalearth::ne_coastline(scale = "medium", returnclass = "sf") |>
@@ -110,6 +110,7 @@ coast = rnaturalearth::ne_coastline(scale = "medium", returnclass = "sf") |>
 y = as_stars(x)
 plot(y, axes = TRUE, main = db$suite, reset = FALSE)
 plot(coast, col = "orange", lwd = 2, add = TRUE)
+plot(bb, border = "purple", add = TRUE)
 ```
 
 # Fetching data and saving images

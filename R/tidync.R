@@ -7,13 +7,76 @@
 #' @export
 #' @param x tidync object
 #' @param y object from which a [sf::st_bbox] can be derived
+#' @param pad numeric vector, a two element vector (x, y) requesting a slight
+#'   padding (if possible) of the bounding box by (x,y) pixels.  Set to 0
+#'   to skip padding in a particular dimension.  If only one valuye is provided it is 
+#'   used in each direction (x,y).
 #' @return the output of [tidync::hyper_filter]
-crop_obpg = function(x = open_obpg(), y = pnw_bb()){
+crop_obpg = function(x = open_obpg(), y = pnw_bb(),
+                     pad = c(1,1)){
+  
+  
   b = sf::st_bbox(y)
+  if (length(pad) == 1) pad = c(pad,pad)
+  if (sum(pad) > 1){
+    tr = transform_summary(x)
+    if (pad[1] > 0){
+      dx = tr |> 
+        dplyr::filter(tolower(.data$name) %in% c("x", "lon", "longitude")) |> 
+        dplyr::pull(dplyr::all_of("delta"))
+      b[['xmin']] = b[['xmin']] - (dx * pad[1])
+      b[['xmax']] = b[['xmax']] + (dx * pad[1])
+    }
+    if (pad[2] > 0){
+      dy = tr |> 
+        dplyr::filter(tolower(.data$name) %in% c("y", "lat", "latitude")) |> 
+        dplyr::pull(dplyr::all_of("delta"))
+      b[['ymin']] = b[['ymin']] - (dy * pad[2])
+      b[['ymax']] = b[['ymax']] + (dy * pad[2])
+    }
+  }
+  
   
   tidync::hyper_filter(x,
                        lon = .data$lon >= b[['xmin']] & .data$lon <= b[['xmax']],
                        lat = .data$lat >= b[['ymin']] & .data$lat <= b[['ymax']])
+}
+
+#' Retrieve a summary table of each spatial (x and y) transform
+#' for the **selected** space.
+#' 
+#' The meaning **selected** space is that defined by [tidync::hyper_filter], 
+#' defaulting to the full spatial extent if no prior `hyper_filter`ing has been done.
+#' 
+#' @export
+#' @param x a [tidync::tidync] object
+#' @return a table providing a spatial summary
+transform_summary = function(x){
+  
+  transforms <- tidync::hyper_transforms(x)[1:2]
+  
+  summary_one = function(name, tr = NULL){
+    x =  dplyr::filter(tr, .data$selected) |> dplyr::pull(1)
+    lim = range(x)
+    n = length(x)
+    d = (lim[2]-lim[1])/(n-1)
+    dplyr::tibble(name = name,
+                  len = n,
+                  min = lim[1],
+                  max = lim[2],
+                  delta = d)
+  }
+  
+  lapply(names(transforms),
+              function(nm){
+                r = if (tolower(nm) %in% c("x", "y", "lon", "lat", "longitude", "latitude")){
+                  summary_one(nm, tr = transforms[[nm]])
+                } else {
+                  NULL
+                }
+                r
+              }) |>
+    dplyr::bind_rows()
 }
 
 

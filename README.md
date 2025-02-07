@@ -25,7 +25,7 @@ Packages from CRAN:
 - [dplyr](https://CRAN.R-project.org/package=dplyr)
 - [sf](https://CRAN.R-project.org/package=sf)
 - [stars](https://CRAN.R-project.org/package=stars)
-- [tidync](https://CRAN.R-project.org/package=ncdf4)
+- [tidync](https://CRAN.R-project.org/package=tidync)
 
 ## Installation
 
@@ -127,7 +127,9 @@ db = attr(x, "db") |>
 Next we can crop to a subset of the resource by providing a bounding
 box. Cropping is non-destructive - you can always later crop the same
 object using a different bounding box. We provide an example bounding
-box for the Pacific Northwest.
+box for the Pacific Northwest. Note that cropping is a suggestion;
+actual cropping occurs at pixel boundaries which may or may not align
+with the requested bounding box.
 
 ``` r
 bb = pnw_bb()
@@ -136,7 +138,10 @@ x = crop_obpg(x, bb)
 
 # Extract as `stars`
 
-Finally, we can extract a `stars` array.
+Finally, we can extract a `stars` array. In the plot you can see the
+array with the coastline (orange) and requested bounding box (“purple”).
+Not that the array data extent is a bit larger than the requested
+bounding box - see the `pad` keyword of `crop_bb()` for details.
 
 ``` r
 coast = rnaturalearth::ne_coastline(scale = "medium", returnclass = "sf") |>
@@ -144,6 +149,7 @@ coast = rnaturalearth::ne_coastline(scale = "medium", returnclass = "sf") |>
 y = as_stars(x)
 plot(y, axes = TRUE, main = db$suite, reset = FALSE)
 plot(coast, col = "orange", lwd = 2, add = TRUE)
+plot(bb, border = "purple", add = TRUE)
 ```
 
 ![](README_files/figure-gfm/stars-1.png)<!-- -->
@@ -290,13 +296,13 @@ x
 
     ## stars object with 3 dimensions and 2 attributes
     ## attribute(s):
-    ##                Min.  1st Qu.    Median      Mean    3rd Qu.      Max.   NA's
-    ## chlor_a  0.05804371 0.203919 0.2365431 0.6747229  0.2697187  5.460822 104533
-    ## sst      2.47499990 8.335000 9.2699995 9.1582758 10.0850000 13.804999  78831
+    ##                Min.   1st Qu.    Median      Mean    3rd Qu.      Max.   NA's
+    ## chlor_a  0.05804371 0.2045063 0.2379057 0.6365259  0.2665869  5.460822 108060
+    ## sst      2.47499990 8.3249998 9.2649994 9.1611317 10.0900002 13.804999  81777
     ## dimension(s):
     ##      from  to     offset    delta refsys point x/y
-    ## x       1 156       -136  0.08333 WGS 84 FALSE [x]
-    ## y       1  96         50 -0.08333 WGS 84 FALSE [y]
+    ## x       1 158     -136.1  0.08333 WGS 84 FALSE [x]
+    ## y       1  98      50.08 -0.08333 WGS 84 FALSE [y]
     ## time    1   7 2025-01-01   1 days   Date    NA
 
 Note that two variables are present, `sst` and `chlor_a`. This only

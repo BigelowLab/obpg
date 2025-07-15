@@ -207,7 +207,8 @@ append_database <- function(x, path, filename = "database"){
   }
   orig = read_database(path, filename = filename)
   orig_info = colnames(orig)
-  x_info =colnames(x)
+  x = dplyr::select(x, dplyr::any_of(orig_info))
+  x_info = colnames(x)
   ident = identical(orig_info, x_info)
   if (!isTRUE(ident)){
     print(ident)
@@ -269,7 +270,7 @@ db_most_recent <- function(x, n = 1){
   x |>
     dplyr::group_by(.data$param, .data$per) |>
     dplyr::arrange(.data$date) |>
-    dplyr::slice(n_(n(), n)) |>
+    dplyr::slice(n_(dplyr::n(), n)) |>
     dplyr::ungroup() |>
     dplyr::arrange(.data$param, .data$per, .data$date)
 }
